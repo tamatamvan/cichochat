@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>CiChoChat</title>
+    <style media="screen">
+      #chat {
+        height: 500px;
+      }
+      #contentWrap{
+        display: none;
+      }
+      #chatWrap {
+        float: left;
+        border:1px #000 solid;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="nickWrap">
+      <p>
+        Enter your username
+      </p>
+      <p id="nickError">
+
+      </p>
+      <form id="setNick" class="" action="index.html" method="post">
+        <input type="text" name="nickname" id="nickname">
+        <input type="submit">
+      </form>
+    </div>
+    <div id="contentWrap">
+      <div id="chatWrap">
+        <div id="chat">
+
+        </div>
+        <form id="send-message" class="" action="index.html" method="post">
+          <input type="text" name="message" id="message" value="">
+          <input type="submit" name="send" value="send">
+        </form>
+      </div>
+    </div>
+
+    <script src="http://code.jquery.com/jquery-latest.min.js" charset="utf-8"></script>
+    <script src="/socket.io/socket.io.js" charset="utf-8"></script>
+    <script type="text/javascript">
+      jQuery(function($) {
+        var socket = io.connect();
+        var $nickForm = $('#setNick');
+        var $nickError = $('#nickError');
+        var $nickBox = $('#nickname');
+        var $users = $('#users');
+        var $messageForm = $('#send-message');
+        var $messageBox = $('#message');
+        var $chat = $('#chat');
+
+        $nickForm.submit(function(e) {
+          e.preventDefault();
+          socket.emit('new user', $nickBox.val(), function(data) {
+            if(data) {
+              $('#nickWrap').hide();
+              $('#contentWrap').show();
+            } else {
+              $nickError.html('That username is already taken!');
+            }
+          });
+          $nickBox.val('');
+        });
+
+        socket.on('usernames', function(data) {
+          var html = "";
+          for (var i = 0; i < data.length; i++) {
+            html += data[i] + '<br/>'
+          }
+          $users.html(html)
+        })
+
+        $messageForm.submit(function(e) {
+          e.preventDefault();
+          socket.emit('send message', $messageBox.val());
+          $messageBox.val('');
+        });
+
+        socket.on('new message', function(data){
+          console.log(data);
+          $chat.append('<b>'+ data.nick+ ": "+'</b>'+ data.msg+ '<br/>');
+        })
+
+
+      });
+    </script>
+  </body>
+</html>
